@@ -161,7 +161,7 @@ const Chatbot = () => {
         )}
       </div>
       <footer className="footer">
-        <p>Made by Vishanth hearsymbol</p>
+        <p>Made by Vishanth </p>
       </footer>
     </div>
   );
