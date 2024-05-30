@@ -3,7 +3,7 @@ import Chatbot from './Chatbot';
 function App() {
   return (
     <div className="App">
-      <h1> Intellect Chatbot</h1>
+      <h2> Chatbot</h2>
       
       <Chatbot />
     </div>

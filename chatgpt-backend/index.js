@@ -89,20 +89,20 @@ app.listen(PORT, () => {
 
 
 
-// const dotenv = require('dotenv');
-// const OpenAI = require('openai');
-// const express = require('express');
+// // const dotenv = require('dotenv');
+// // const OpenAI = require('openai');
+// // const express = require('express');
 
-// dotenv.config();
-// const app = express()
-// app.use(express.json());  // Middleware to parse JSON bodies
+// // dotenv.config();
+// // const app = express()
+// // app.use(express.json());  // Middleware to parse JSON bodies
 
-// // Configure the OpenAI API with your API key
-// const openai = new OpenAI({
-//   apiKey: process.env.API_KEY,
-// const userQuery = "what is the capital of France";  
-// const userQuery = "what is the capital of India"; 
-// });
+// // // Configure the OpenAI API with your API key
+// // const openai = new OpenAI({
+// //   apiKey: process.env.API_KEY,
+// // const userQuery = "what is the capital of France";  
+// // const userQuery = "what is the capital of India"; 
+// // });
 
 
 
