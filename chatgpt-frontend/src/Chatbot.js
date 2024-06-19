@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import './Chatbot.css';
 
 const Chatbot = () => {
@@ -8,7 +7,6 @@ const Chatbot = () => {
   const [loading, setLoading] = useState(false);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleToggleSearch = () => {
     setSearchEnabled(!searchEnabled);
@@ -16,10 +14,6 @@ const Chatbot = () => {
 
   const handleToggleDarkMode = () => {
     setDarkMode(!darkMode);
-  };
-
-  const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
@@ -34,21 +28,7 @@ const Chatbot = () => {
     );
 
     try {
-      if (selectedFile) {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        const response = await Promise.race([
-          axios.post('/api/upload', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          }),
-          timeout
-        ]);
-
-        setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: `File uploaded successfully: ${selectedFile.name}` }]);
-      } else if (searchEnabled) {
+      if (searchEnabled) {
         let companyResponse = null, gptResponse = null;
 
         try {
@@ -225,7 +205,6 @@ const Chatbot = () => {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type your message..."
             />
-            <input type="file" onChange={handleFileChange} />
             <button type="submit">Send</button>
           </form>
         )}
