@@ -1,16 +1,23 @@
+import React from 'react';
 import Chatbot from './Chatbot';
+import DataIngestion from './DataInjection';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 function App() {
   return (
-    <div className="App">
-      <h2> Chatbot</h2>
-      
-      <Chatbot />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Chatbot />} />
+          <Route path="/data" element={<DataIngestion />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+
 
 
 
