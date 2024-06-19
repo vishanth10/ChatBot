@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './Chatbot.css';
 
 const Chatbot = () => {
@@ -7,6 +8,7 @@ const Chatbot = () => {
   const [loading, setLoading] = useState(false);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const handleToggleSearch = () => {
     setSearchEnabled(!searchEnabled);
@@ -16,6 +18,10 @@ const Chatbot = () => {
     setDarkMode(!darkMode);
   };
 
+  const handleFileChange = (event) => {
+    setSelectedFile(event.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -23,38 +29,101 @@ const Chatbot = () => {
     const userMessage = { sender: 'user', text: query };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    if (searchEnabled) {
-      const [companyResponse, gptResponse] = await Promise.all([
-        fetch('http://localhost:8000/getApi', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query })
-        }).then(res => res.json()),
-        fetch('http://localhost:8000/getResponse', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query })
-        }).then(res => res.json())
-      ]);
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), 30000)
+    );
 
-      streamResponses(formatCompanyResponse(companyResponse), formatOpenAiResponse(gptResponse.response));
-    } else {
-      const gptResponse = await fetch('http://localhost:8000/getResponse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query })
-      }).then(res => res.json());
+    try {
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
 
-      streamResponses(null, formatOpenAiResponse(gptResponse.response));
+        const response = await Promise.race([
+          axios.post('/api/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }),
+          timeout
+        ]);
+
+        setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: `File uploaded successfully: ${selectedFile.name}` }]);
+      } else if (searchEnabled) {
+        let companyResponse = null, gptResponse = null;
+
+        try {
+          companyResponse = await Promise.race([
+            fetch('http://localhost:8000/getApi', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            }).then(res => {
+              if (!res.ok) throw new Error('Company API error');
+              return res.json();
+            }),
+            timeout
+          ]);
+
+          console.log('Company Response:', companyResponse);
+        } catch (error) {
+          console.error('Error fetching Company API:', error);
+        }
+
+        try {
+          gptResponse = await Promise.race([
+            fetch('http://localhost:8000/getResponse', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query })
+            }).then(res => {
+              if (!res.ok) throw new Error('OpenAI API error');
+              return res.json();
+            }),
+            timeout
+          ]);
+
+          console.log('OpenAI Response:', gptResponse);
+        } catch (error) {
+          console.error('Error fetching OpenAI API:', error);
+        }
+
+        if (companyResponse || gptResponse) {
+          streamResponses(
+            companyResponse ? formatCompanyResponse(companyResponse) : null,
+            gptResponse ? formatOpenAiResponse(gptResponse.response) : null
+          );
+        } else {
+          setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: 'Both API requests failed' }]);
+        }
+      } else {
+        const gptResponse = await Promise.race([
+          fetch('http://localhost:8000/getResponse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+          }).then(res => {
+            if (!res.ok) throw new Error('OpenAI API error');
+            return res.json();
+          }),
+          timeout
+        ]);
+
+        console.log('OpenAI Response:', gptResponse);
+
+        streamResponses(null, formatOpenAiResponse(gptResponse.response));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages((prevMessages) => [...prevMessages, { sender: 'bot', text: `Error: ${error.message}` }]);
+    } finally {
+      setQuery('');
+      setLoading(false);
     }
-
-    setQuery('');
-    setLoading(false);
   };
 
   const streamResponses = (companyResponse, openAiResponse) => {
     const companyParts = companyResponse ? companyResponse.split(' ') : [];
-    const openAiParts = openAiResponse.split(' ');
+    const openAiParts = openAiResponse ? openAiResponse.split(' ') : [];
 
     let streamedCompany = '';
     let streamedOpenAi = '';
@@ -134,7 +203,7 @@ const Chatbot = () => {
             <div key={index} className={`message ${msg.sender}`}>
               {msg.sender === 'bot' ? (
                 <div className="message-content bot-message">
-                  <div dangerouslySetInnerHTML={{ __html: `<p><strong>OpenAI Response:</strong><br/>${msg.openAi}</p>` }} />
+                  <div dangerouslySetInnerHTML={{ __html: `<p><strong>OpenAI Response:</strong><br/>${msg.openAi || 'No response'}</p>` }} />
                   {msg.company && (
                     <div dangerouslySetInnerHTML={{ __html: `<p><strong>Company Response:</strong><br/>${msg.company}</p>` }} />
                   )}
@@ -156,12 +225,13 @@ const Chatbot = () => {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type your message..."
             />
+            <input type="file" onChange={handleFileChange} />
             <button type="submit">Send</button>
           </form>
         )}
       </div>
       <footer className="footer">
-        <p>Made by Vishanth </p>
+        <p>Made by Vishanth</p>
       </footer>
     </div>
   );
