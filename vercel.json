@@ -2,10 +2,12 @@
   "version": 2,
   "builds": [
     { "src": "chatgpt-backend/index.js", "use": "@vercel/node" },
-    { "src": "chatgpt-frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } }
+    { "src": "chatgpt-frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "build" } },
+    { "src": "Python_backend/app.py", "use": "@vercel/python" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/chatgpt-backend/index.js" },
+    { "src": "/python/(.*)", "dest": "/Python_backend/app.py" },
     { "src": "/(.*)", "dest": "/chatgpt-frontend/$1" }
   ]
 }
