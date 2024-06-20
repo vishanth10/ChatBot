@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://127.0.0.1:5000"
 
 def test_get_oauth_url(service):
     url = f"{BASE_URL}/get_oauth_url"
@@ -11,22 +11,22 @@ def test_get_oauth_url(service):
     print(response.text)
     print("")
 
-# def test_list_user_data_sources():
-#     url = f"{BASE_URL}/list_user_data_sources"
-#     headers = {'Content-Type': 'application/json'}
-#     response = requests.request("POST", url, headers=headers)
-#     print("LIST USER DATA SOURCES:")
-#     print(response.text)
-#     print("")
+def test_list_user_data_sources():
+    url = f"{BASE_URL}/list_user_data_sources"
+    headers = {'Content-Type': 'application/json'}
+    response = requests.request("POST", url, headers=headers)
+    print("LIST USER DATA SOURCES:")
+    print(response.text)
+    print("")
 
-# def test_list_files(service):
-#     url = f"{BASE_URL}/list_files"
-#     payload = {"service": service}
-#     headers = {'Content-Type': 'application/json'}
-#     response = requests.request("POST", url, json=payload, headers=headers)
-#     print(f"LIST FILES ({service}):")
-#     print(response.text)
-#     print("")
+def test_list_files(service):
+    url = f"{BASE_URL}/list_files"
+    payload = {"service": service}
+    headers = {'Content-Type': 'application/json'}
+    response = requests.request("POST", url, json=payload, headers=headers)
+    print(f"LIST FILES ({service}):")
+    print(response.text)
+    print("")
 
 # def test_list_uploaded_files(service):
 #     url = f"{BASE_URL}/list_uploaded_files"
@@ -51,11 +51,11 @@ if __name__ == "__main__":
     # Test getting OAuth URL for Google Drive
     test_get_oauth_url("GOOGLE_DRIVE")
 
-#     # Test listing user data sources
-#     #test_list_user_data_sources()
+    # Test listing user data sources
+    test_list_user_data_sources()
 
-#     # Test listing files in Google Drive
-#     #test_list_files("GOOGLE_DRIVE")
+    # Test listing files in Google Drive
+    test_list_files("GOOGLE_DRIVE")
 
 #     # Test listing uploaded files in Google Drive
 #     #test_list_uploaded_files("GOOGLE_DRIVE")

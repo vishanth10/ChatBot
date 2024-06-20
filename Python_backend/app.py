@@ -1,15 +1,21 @@
 from flask import Flask, request, jsonify
 from carbon import Carbon
+from flask_cors import CORS
 from decimal import Decimal
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
 CARBON_API_KEY = "a38ee1fe5fef56fc8e1ae2afc881378804bb902882442e1554adae4f82ee23ea"
 CUSTOMER_ID = "Candid"
 
 # Initialize Carbon SDK
 carbon = Carbon(api_key=CARBON_API_KEY, customer_id=CUSTOMER_ID)
+
+@app.route('/')
+def hello_world():
+  return 'Hello, This is working!'
 
 @app.route('/get_oauth_url', methods=['POST'])
 def get_oauth_url():
@@ -87,7 +93,7 @@ def list_uploaded_files():
         "order_by": "created_at",
         "order_dir": "desc",
         "filters": {
-            "organization_user_data_source_id": [data_source_id],
+            "organization_user_data_source_id": [],
             "embedding_generators": ["OPENAI"],
             "include_all_children": True,
         },
@@ -122,15 +128,15 @@ def search_documents():
     payload = {
         "query": query,
         "k": 2,
-        "file_ids": file_ids,
+        "file_ids": [],
         "include_all_children": True,
         "include_tags": True,
         "include_vectors": True,
         "include_raw_file": True,
         "hybrid_search": False,
         "hybrid_search_tuning_parameters": {
-            "weight_a": 0.5,
-            "weight_b": 0.5
+            "weight_a": 0.7,
+            "weight_b": 0.2
         },
         "media_type": "TEXT",
         "embedding_model": "OPENAI"
@@ -164,4 +170,4 @@ def get_data_source_id(service):
     return response.results[0].id
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=8000, debug=True)
+    app.run(host='localhost', port=3200, debug=True)

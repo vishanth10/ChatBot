@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './DataInjection.css';
+
+const BASE_URL = 'http://localhost:3200';
 
 const DataIngestion = () => {
   const [service, setService] = useState('GOOGLE_DRIVE');
@@ -9,55 +12,49 @@ const DataIngestion = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const makePostRequest = async (url, payload, setState) => {
+    setLoading(true);
+    try {
+      const response = await axios.post(url, payload);
+      setState(response.data);
+    } catch (error) {
+      console.error(`Error during ${url} request`, error);
+      alert(`Failed to complete the request. Please try again.`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGetOauthUrl = async () => {
     try {
-      const response = await axios.get(`/get_oauth_url`, { params: { service } });
+      const response = await axios.post(`${BASE_URL}/get_oauth_url`, { service });
       setOauthUrl(response.data.oauth_url);
     } catch (error) {
       console.error('Error fetching OAuth URL', error);
     }
   };
 
-  const handleListDataSources = async () => {
-    try {
-      const response = await axios.get('/list_user_data_sources');
-      setDataSources(response.data.data_sources);
-    } catch (error) {
-      console.error('Error listing data sources', error);
+  useEffect(() => {
+    if (oauthUrl) {
+      window.open(oauthUrl, '_blank');
     }
-  };
+  }, [oauthUrl]);
 
-  const handleListFiles = async () => {
-    try {
-      const response = await axios.get('/list_files', { params: { service } });
-      setFiles(response.data.files);
-    } catch (error) {
-      console.error('Error listing files', error);
-    }
-  };
+  const handleListDataSources = () => makePostRequest(`${BASE_URL}/list_user_data_sources`, {}, data => setDataSources(data.data_sources));
 
-  const handleListUploadedFiles = async () => {
-    try {
-      const response = await axios.get('/list_uploaded_files', { params: { service } });
-      setUploadedFiles(response.data.uploaded_files);
-    } catch (error) {
-      console.error('Error listing uploaded files', error);
-    }
-  };
+  const handleListFiles = () => makePostRequest(`${BASE_URL}/list_files`, { service }, data => setFiles(data.files));
 
-  const handleSearchDocuments = async () => {
-    try {
-      const fileIds = uploadedFiles.map(file => file.id);
-      const response = await axios.post('/search_documents', { query, file_ids: fileIds });
-      setSearchResults(response.data.search_results);
-    } catch (error) {
-      console.error('Error searching documents', error);
-    }
+  const handleListUploadedFiles = () => makePostRequest(`${BASE_URL}/list_uploaded_files`, { service }, data => setUploadedFiles(data.uploaded_files));
+
+  const handleSearchDocuments = () => {
+    const fileIds = uploadedFiles.map(file => file.id);
+    makePostRequest(`${BASE_URL}/search_documents`, { query, file_ids: fileIds }, data => setSearchResults(data.search_results));
   };
 
   return (
-    <div>
+    <div className="container">
       <h1>Data Ingestion</h1>
       <div>
         <label>Select Data Source:</label>
@@ -65,16 +62,12 @@ const DataIngestion = () => {
           <option value="GOOGLE_DRIVE">Google Drive</option>
           <option value="DROPBOX">Dropbox</option>
           <option value="NOTION">Notion</option>
+          <option value="ONE_DRIVE">OneDrive</option> {/* New option added */}
         </select>
-        <button onClick={handleGetOauthUrl}>Get OAuth URL</button>
-        {oauthUrl && (
-          <div>
-            <a href={oauthUrl} target="_blank" rel="noopener noreferrer">Authenticate</a>
-          </div>
-        )}
+        <button onClick={handleGetOauthUrl} disabled={loading}>Connect</button>
       </div>
       <div>
-        <button onClick={handleListDataSources}>List Data Sources</button>
+        <button onClick={handleListDataSources} disabled={loading}>List Data Sources</button>
         <ul>
           {dataSources.map(ds => (
             <li key={ds.id}>
@@ -85,7 +78,7 @@ const DataIngestion = () => {
         </ul>
       </div>
       <div>
-        <button onClick={handleListFiles}>List Files</button>
+        <button onClick={handleListFiles} disabled={loading}>List Files</button>
         <ul>
           {files.map(file => (
             <li key={file.name}>{file.name}</li>
@@ -93,7 +86,7 @@ const DataIngestion = () => {
         </ul>
       </div>
       <div>
-        <button onClick={handleListUploadedFiles}>Show Uploaded Files</button>
+        <button onClick={handleListUploadedFiles} disabled={loading}>Show Uploaded Files</button>
         <ul>
           {uploadedFiles.map(file => (
             <li key={file.id}>
@@ -111,7 +104,7 @@ const DataIngestion = () => {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Enter your search query"
         />
-        <button onClick={handleSearchDocuments}>Search</button>
+        <button onClick={handleSearchDocuments} disabled={loading}>Search</button>
         <ul>
           {searchResults.map((result, index) => (
             <li key={index}>

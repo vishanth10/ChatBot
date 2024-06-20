@@ -9,7 +9,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<Chatbot />} />
-          <Route path="/data" element={<DataIngestion />} />
+          <Route path="/datainjection" element={<DataIngestion />} />
         </Routes>
       </div>
     </Router>
